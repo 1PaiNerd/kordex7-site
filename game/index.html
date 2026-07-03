@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Cordas do Infinito — Sintonia Runner. Corrida procedural cósmica 3D no navegador."
+    />
+    <title>CORDAS DO INFINITO — Sintonia Runner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main id="app" aria-label="Jogo Cordas do Infinito"></main>
+
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="tunePulse" aria-hidden="true"></div>
+    <div id="fade" aria-hidden="true"></div>
+
+    <section id="hud" aria-label="Informações da jornada">
+      <div id="frag"></div>
+
+      <div id="worldTag">
+        <span class="eyebrow">MUNDO 00</span>
+        <strong>KORDEX-7</strong>
+      </div>
+
+      <div id="runnerStats" aria-label="Progresso da corrida">
+        <span><b id="stageIndicator">FASE 1/5</b></span>
+        <span><small>DISTÂNCIA</small><strong id="distanceValue">0 m</strong></span>
+        <span><small>PONTOS</small><strong id="scoreValue">0</strong></span>
+        <span><small>MELHOR</small><strong id="bestValue">0</strong></span>
+        <span id="seedDisplay" class="debug-seed" hidden></span>
+      </div>
+
+      <div id="energy">
+        <div class="energy-head">
+          <span>SINTONIA</span>
+          <span id="energyPercent">100%</span>
+        </div>
+        <div class="bar"><div class="fill" id="energyFill"></div></div>
+        <div class="key"><b>E</b> sintonizar · <b>M</b> som</div>
+      </div>
+
+      <button id="pauseHudBtn" class="icon-btn" type="button" aria-label="Pausar jogo">
+        II
+      </button>
+
+      <div id="checkpointTag" aria-live="polite">
+        <span>ÂNCORA</span>
+        <strong id="checkpointName">Entrada KORDEX-7</strong>
+      </div>
+
+      <div id="tutorial" role="status" aria-live="polite">
+        <span class="tutorial-icon">✦</span>
+        <span id="tutorialText"></span>
+      </div>
+
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div id="zorgSay"></div>
+    </section>
+
+    <section class="screen" id="start">
+      <div class="screen-card hero-card">
+        <div class="world-kicker">MUNDO 00 · KORDEX-7</div>
+        <h1 class="title">CORDAS DO INFINITO</h1>
+        <h2 class="subtitle">SINTONIA RUNNER</h2>
+        <p class="mission">
+          A <b>KORDEX-7</b> abre uma rota diferente a cada seed. Atravesse
+          ilhas flutuantes, recupere Fragmentos de Frequência e
+          <em>sintonize as cordas</em> para revelar pontes que só existem
+          em outra frequência.
+        </p>
+        <div class="keys desktop-help">
+          <div><kbd>W A S D</kbd> mover</div>
+          <div><kbd>ESPAÇO</kbd> pular</div>
+          <div><kbd>E</kbd> sintonizar</div>
+          <div><kbd>ESC</kbd> pausa</div>
+        </div>
+        <p class="mobile-help">Use o joystick e os botões na tela.</p>
+        <button class="btn" id="playBtn" type="button">INICIAR JORNADA</button>
+        <p class="hintline">Fantasia cósmica · plataformas · sintonia dimensional</p>
+      </div>
+    </section>
+
+    <section class="screen hide" id="pause" aria-label="Jogo pausado">
+      <div class="screen-card compact-card">
+        <div class="world-kicker">JORNADA SUSPENSA</div>
+        <h2 class="panel-title">PAUSA</h2>
+        <p class="panel-copy">
+          As cordas continuam vibrando. Você pode retomar da última âncora.
+        </p>
+        <div class="button-stack">
+          <button class="btn" id="resumeBtn" type="button">CONTINUAR</button>
+          <button class="btn secondary" id="restartBtn" type="button">REINICIAR FASE</button>
+        </div>
+        <p class="hintline">ESC / P para continuar</p>
+      </div>
+    </section>
+
+    <section class="screen hide transition-screen" id="stageTransition" aria-label="Próxima fase">
+      <div class="screen-card compact-card">
+        <div class="world-kicker">NOVA ROTA GERADA</div>
+        <h2 class="panel-title" id="transitionTitle">FASE 2</h2>
+        <p class="panel-copy" id="transitionMessage">NOVA SINTONIA</p>
+        <div class="transition-score" id="transitionScore">+0 PONTOS</div>
+      </div>
+    </section>
+
+    <section class="screen hide" id="win" aria-label="Mundo concluído">
+      <div class="screen-card win-card">
+        <div class="world-kicker">MUNDO 00 CONCLUÍDO</div>
+        <h2 class="title win-title">SINTONIA RESTAURADA</h2>
+        <div class="stats">
+          <div class="stat"><strong id="stTime">0:00</strong><span>TEMPO</span></div>
+          <div class="stat"><strong id="stFalls">0</strong><span>QUEDAS</span></div>
+          <div class="stat"><strong id="stFragments">7/7</strong><span>FRAGMENTOS</span></div>
+          <div class="stat"><strong id="stScore">0</strong><span>PONTOS</span></div>
+        </div>
+        <p class="quote">
+          <span class="who">ZORG:</span> “Cinco rotas estabilizadas. Isso é
+          estatisticamente improvável e narrativamente excelente.”<br />
+          <span class="who x">XUL:</span> <span id="xulLine"></span>
+        </p>
+        <div class="button-stack">
+          <button class="btn" id="againBtn" type="button">SINTONIZAR DE NOVO</button>
+          <button class="btn secondary locked" type="button" disabled>
+            MUNDO 01 · DRAKKARETH — EM PREPARAÇÃO
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="mobileControls" aria-label="Controles de toque">
+      <div id="joystick" aria-label="Joystick virtual">
+        <div class="joystick-ring"></div>
+        <div id="joystickKnob"></div>
+      </div>
+      <div class="mobile-actions">
+        <button id="mobileTune" class="mobile-action tune" type="button" aria-label="Sintonizar">
+          <span>◈</span><small>SINTONIA</small>
+        </button>
+        <button id="mobileJump" class="mobile-action jump" type="button" aria-label="Pular">
+          <span>↑</span><small>PULAR</small>
+        </button>
+      </div>
+    </section>
+
+    <noscript>Este jogo precisa de JavaScript para funcionar.</noscript>
+    <script>
+      window.__KORDEX_BOOTED__ = false;
+      window.setTimeout(function () {
+        if (window.__KORDEX_BOOTED__) return;
+
+        console.error(
+          "[BOOT] O jogo não inicializou. Verifique o carregamento de src/main.js e dos módulos Three.js.",
+        );
+
+        var card = document.querySelector("#start .screen-card");
+        if (!card || document.getElementById("bootError")) return;
+
+        var error = document.createElement("p");
+        error.id = "bootError";
+        error.className = "boot-error";
+        error.textContent =
+          window.location.protocol === "file:"
+            ? "Este arquivo foi aberto diretamente. Feche esta aba e dê dois cliques em INICIAR_JOGO.bat para abrir o jogo corretamente."
+            : "O jogo não conseguiu carregar os módulos. Confirme o servidor local, a conexão com a internet e recarregue com Ctrl+F5.";
+        card.appendChild(error);
+      }, 8000);
+    </script>
+    <script type="module" src="./src/main.js?v=3.0.3"></script>
+  </body>
+</html>
