@@ -1,0 +1,14 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+
+# Node (game uses Vite optionally)
+node_modules/
+dist/
+.cache/
+
+# Windows-only launchers (not needed for the web build)
+game/INICIAR_JOGO.bat
+game/INICIAR_JOGO.ps1
